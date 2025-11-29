@@ -1,284 +1,59 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Fleet Management - Admin</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <title>Fleet Management</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- NAVBAR -->
-  <nav class="navbar">
-    <div class="nav-left"><strong>Fleet Admin</strong></div>
-    <div class="nav-right">
-      <label>
-        Category:
-        <select id="filterCategory">
-          <option value="All">All</option>
-          <option>Auto</option>
-          <option>Car</option>
-          <option>Truck</option>
-          <option>Bus</option>
-        </select>
-      </label>
 
-      <label>
-        Availability:
-        <select id="filterAvailability">
-          <option value="All">All</option>
-          <option>Available</option>
-          <option>Unavailable</option>
-        </select>
-      </label>
+<!-- NAVBAR -->
+<div class="navbar">
+    <select id="filterCategory">
+        <option value="All">All Categories</option>
+        <option value="Auto">Auto</option>
+        <option value="Car">Car</option>
+        <option value="Truck">Truck</option>
+        <option value="Bus">Bus</option>
+    </select>
 
-      <button id="clearFilterBtn">Clear Filter</button>
-    </div>
-  </nav>
+    <select id="filterAvailability">
+        <option value="All">All Availability</option>
+        <option value="Available">Available</option>
+        <option value="Unavailable">Unavailable</option>
+    </select>
 
-  <div class="page-grid">
-    <!-- SIDEBAR (Form) -->
-    <aside class="sidebar">
-      <h3>Add Fleet</h3>
-      <form id="fleetForm" onsubmit="return false;">
-        <label for="regNo">Reg No of Vehicle</label>
-        <input id="regNo" type="text" placeholder="e.g., KA01AB1234" required>
+    <button id="clearFilter">Clear Filter</button>
+</div>
 
-        <label for="category">Category</label>
-        <select id="category" required>
-          <option value="">Select category</option>
-          <option>Auto</option>
-          <option>Car</option>
-          <option>Truck</option>
-          <option>Bus</option>
-        </select>
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <h3>Add Fleet</h3>
 
-        <label for="driverName">Driver Name</label>
-        <input id="driverName" type="text" placeholder="Driver Name" required>
+    <input id="regNo" type="text" placeholder="Reg No of Vehicle">
+    
+    <select id="category">
+        <option value="">Select Category</option>
+        <option value="Auto">Auto</option>
+        <option value="Car">Car</option>
+        <option value="Truck">Truck</option>
+        <option value="Bus">Bus</option>
+    </select>
 
-        <label for="isAvailable">Is Available</label>
-        <select id="isAvailable" required>
-          <option value="Available">Available</option>
-          <option value="Unavailable">Unavailable</option>
-        </select>
+    <input id="driver" type="text" placeholder="Driver Name">
 
-        <button id="addFleetBtn" type="submit">Add Fleet</button>
-      </form>
-    </aside>
+    <select id="available">
+        <option value="Available">Available</option>
+        <option value="Unavailable">Unavailable</option>
+    </select>
 
-    <!-- MAIN CONTENT -->
-    <main class="main-content">
-      <div id="cardsContainer" class="cards-grid"></div>
-      <div id="emptyMsg" class="empty-msg" style="display:none;">No vehicle found. Add new fleet from the sidebar.</div>
-    </main>
-  </div>
+    <button id="addFleet">Add Fleet</button>
+</div>
 
-  <!-- Update Driver Popup -->
-  <div id="driverPopup" class="popup">
-    <div class="popup-content">
-      <h3>Enter New Driver Name</h3>
-      <input type="text" id="newDriver" placeholder="New Driver Name">
-      <div style="margin-top:10px;">
-        <button class="btn" onclick="saveDriverFromPopup()">Save</button>
-        <button class="btn" style="background:#6c757d; margin-left:8px;" onclick="closeDriverPopup()">Cancel</button>
-      </div>
-    </div>
-  </div>
+<!-- MAIN CONTENT -->
+<div id="fleetContainer" class="card-container"></div>
 
-  <script>
-    // sample image (use this for cards)
-    const sampleVehicleImg = 'https://coding-platform.s3.amazonaws.com/dev/lms/tickets/5e80fcb6-3f8e-480c-945b-30a5359eb40e/JNmYjkVr3WOjsrbu.png';
+<script src="script.js" defer></script>
 
-    // Elements
-    const regNoInput = document.getElementById('regNo');
-    const categoryInput = document.getElementById('category');
-    const driverInput = document.getElementById('driverName');
-    const isAvailableInput = document.getElementById('isAvailable');
-    const cardsContainer = document.getElementById('cardsContainer');
-    const emptyMsg = document.getElementById('emptyMsg');
-
-    const filterCategory = document.getElementById('filterCategory');
-    const filterAvailability = document.getElementById('filterAvailability');
-    const clearFilterBtn = document.getElementById('clearFilterBtn');
-
-    const driverPopup = document.getElementById('driverPopup');
-    const newDriverInput = document.getElementById('newDriver');
-
-    const STORAGE_KEY = 'fleet_app_vehicles_v1';
-    let vehicles = loadVehiclesFromStorage();
-    let pendingUpdateId = null; // track which vehicle is being edited
-
-    // add fleet event
-    document.getElementById('addFleetBtn').addEventListener('click', () => addFleet());
-
-    function addFleet() {
-      const regNo = regNoInput.value.trim();
-      const category = categoryInput.value;
-      const driverName = driverInput.value.trim();
-      const availability = isAvailableInput.value;
-
-      if (!regNo) { alert('Reg No is required'); return; }
-      if (!category) { alert('Category is required'); return; }
-      if (!driverName) { alert('Driver name is required'); return; }
-
-      const vehicle = {
-        id: Date.now().toString(),
-        regNo,
-        category,
-        driverName,
-        availability,
-        img: sampleVehicleImg
-      };
-
-      vehicles.push(vehicle);
-      saveVehiclesToStorage();
-      clearForm();
-      renderCards();
-    }
-
-    function clearForm() {
-      regNoInput.value = '';
-      categoryInput.value = '';
-      driverInput.value = '';
-      isAvailableInput.value = 'Available';
-    }
-
-    // render cards
-    function renderCards() {
-      const catFilter = filterCategory.value;
-      const availFilter = filterAvailability.value;
-
-      let toShow = vehicles.slice();
-
-      if (catFilter && catFilter !== 'All') toShow = toShow.filter(v => v.category === catFilter);
-      if (availFilter && availFilter !== 'All') toShow = toShow.filter(v => v.availability === availFilter);
-
-      if (toShow.length === 0) {
-        cardsContainer.innerHTML = '';
-        emptyMsg.style.display = 'block';
-        return;
-      } else {
-        emptyMsg.style.display = 'none';
-      }
-
-      cardsContainer.innerHTML = '';
-      toShow.forEach(v => {
-        const card = document.createElement('div');
-        card.className = 'fleet-card';
-
-        card.innerHTML = `
-          <img src="${v.img}" alt="vehicle image" class="vehicle-img">
-          <div class="card-body">
-            <p><strong>Reg No:</strong> ${escapeHtml(v.regNo)}</p>
-            <p><strong>Category:</strong> ${escapeHtml(v.category)}</p>
-            <p><strong>Driver:</strong> <span class="driver-name">${escapeHtml(v.driverName)}</span></p>
-            <p><strong>Availability:</strong> <span class="availability">${escapeHtml(v.availability)}</span></p>
-          </div>
-          <div class="card-actions">
-            <button class="btn update-driver" data-id="${v.id}">Update Driver</button>
-            <button class="btn toggle-availability" data-id="${v.id}">Change Availability</button>
-            <button class="btn delete-vehicle" data-id="${v.id}" style="background:#e55353;">Delete Vehicle</button>
-          </div>
-        `;
-
-        cardsContainer.appendChild(card);
-      });
-
-      // attach listeners
-      Array.from(document.getElementsByClassName('update-driver')).forEach(btn => {
-        btn.addEventListener('click', () => {
-          openDriverPopup(btn.dataset.id);
-        });
-      });
-      Array.from(document.getElementsByClassName('toggle-availability')).forEach(btn => {
-        btn.addEventListener('click', () => handleToggleAvailability(btn.dataset.id));
-      });
-      Array.from(document.getElementsByClassName('delete-vehicle')).forEach(btn => {
-        btn.addEventListener('click', () => handleDeleteVehicle(btn.dataset.id));
-      });
-    }
-
-    // update driver popup
-    function openDriverPopup(id) {
-      pendingUpdateId = id;
-      const vehicle = vehicles.find(v => v.id === id);
-      if (!vehicle) return;
-      newDriverInput.value = vehicle.driverName || '';
-      driverPopup.style.display = 'flex';
-      newDriverInput.focus();
-    }
-
-    function closeDriverPopup() {
-      driverPopup.style.display = 'none';
-      pendingUpdateId = null;
-      newDriverInput.value = '';
-    }
-
-    function saveDriverFromPopup() {
-      const name = newDriverInput.value;
-      if (name === null) { closeDriverPopup(); return; }
-      if (name.trim() === '') {
-        alert('Driver name cannot be empty.');
-        return;
-      }
-      const vehicle = vehicles.find(v => v.id === pendingUpdateId);
-      if (!vehicle) return;
-      vehicle.driverName = name.trim();
-      saveVehiclesToStorage();
-      renderCards();
-      closeDriverPopup();
-    }
-
-    // toggle availability
-    function handleToggleAvailability(id) {
-      const vehicle = vehicles.find(v => v.id === id);
-      if (!vehicle) return;
-      vehicle.availability = (vehicle.availability === 'Available') ? 'Unavailable' : 'Available';
-      saveVehiclesToStorage();
-      renderCards();
-    }
-
-    // delete
-    function handleDeleteVehicle(id) {
-      const vehicle = vehicles.find(v => v.id === id);
-      if (!vehicle) return;
-      const ok = confirm(`Are you sure you want to delete vehicle ${vehicle.regNo}?`);
-      if (!ok) return;
-      vehicles = vehicles.filter(v => v.id !== id);
-      saveVehiclesToStorage();
-      renderCards();
-    }
-
-    // filters
-    filterCategory.addEventListener('change', renderCards);
-    filterAvailability.addEventListener('change', renderCards);
-    clearFilterBtn.addEventListener('click', () => {
-      filterCategory.value = 'All';
-      filterAvailability.value = 'All';
-      renderCards();
-    });
-
-    // storage helpers
-    function saveVehiclesToStorage() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(vehicles));
-    }
-    function loadVehiclesFromStorage() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return [];
-        return JSON.parse(raw);
-      } catch (err) {
-        console.error('Failed to parse vehicles from storage', err);
-        return [];
-      }
-    }
-
-    function escapeHtml(text) {
-      const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-      return String(text).replace(/[&<>"']/g, m => map[m]);
-    }
-
-    // initial render
-    renderCards();
-  </script>
 </body>
 </html>
