@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fleet Management - Login</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="centered-card login-card">
+    <h2>Fleet Management - Admin Login</h2>
+    <form id="loginForm" onsubmit="return false;">
+      <label for="email">Email</label>
+      <input id="email" type="email" placeholder="admin@gmail.com" required>
+
+      <label for="password">Password</label>
+      <input id="password" type="password" placeholder="admin1234" required>
+
+      <button id="loginBtn" type="submit">Login</button>
+    </form>
+  </div>
+
+  <script>
+    // client-side login validation
+    const correctEmail = 'admin@gmail.com';
+    const correctPassword = 'admin1234';
+
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value.trim();
+      const pwd = document.getElementById('password').value;
+
+      if (email === correctEmail && pwd === correctPassword) {
+        alert('Login success');
+        window.location.href = 'admin.html';
+      } else {
+        alert('Wrong email or password');
+      }
+    });
+  </script>
+</body>
+</html>
